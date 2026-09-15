@@ -13,6 +13,7 @@ const ReportsPage = lazy(() => import('./pages/ReportsPage').then((module) => ({
 const LoginPage = lazy(() => import('./pages/LoginPage').then((module) => ({ default: module.LoginPage })))
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then((module) => ({ default: module.RegisterPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })))
+const ClientsPage = lazy(() => import('./pages/ClientsPage').then((module) => ({ default: module.ClientsPage })))
 
 export default function App() {
   return <BrowserRouter><Suspense fallback={<LoadingState />}><Routes>
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/projects/:projectId" element={<ProjectPage />} />
         <Route path="/sprints/:sprintId" element={<SprintPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/clients" element={<ClientsPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>

@@ -56,6 +56,7 @@ Todos viven bajo `/api`.
 | --- | --- |
 | Autenticación | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `GET /auth/google/start`, `GET /auth/google/callback` |
 | Integración Google | `GET /integrations/google/status`, `POST /integrations/google/connect`, `GET /integrations/google/callback`, `DELETE /integrations/google/connection` |
+| Workspaces | `GET /workspaces/current`, `GET/POST /workspaces/current/members`, `PATCH/DELETE /workspaces/current/members/:memberId` |
 | Clientes | `GET/POST /clients`, `GET/PATCH/PUT/DELETE /clients/:id` |
 | Proyectos | `GET/POST /projects`, `GET/PATCH/PUT/DELETE /projects/:id` |
 | Sprints | `GET/POST /sprints`, `GET/PATCH/PUT/DELETE /sprints/:id` |
@@ -69,6 +70,8 @@ Todos viven bajo `/api`.
 | Salud | `GET /health` |
 
 Salud, autenticación y portal público son las únicas rutas que no requieren una sesión previa. La cookie de sesión es `httpOnly`, se valida en el backend y Axios envía credenciales automáticamente.
+
+Las peticiones internas incluyen `X-Workspace-Id`. El backend comprueba que el usuario sea miembro antes de devolver datos. Los roles `OWNER`, `ADMIN`, `EDITOR` y el rol heredado `MEMBER` pueden modificar; `CLIENT` solo puede leer. Clientes, proyectos, sprints, backlog, reuniones, métricas y reportes quedan filtrados por el workspace activo.
 
 Los listados de sprints, backlog e items aceptan `projectId` o `sprintId` como query param según corresponda. En los items del backlog, `isKey: true` publica el item como hito en el portal del cliente.
 

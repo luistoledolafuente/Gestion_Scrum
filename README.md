@@ -2,7 +2,7 @@
 
 Base full-stack para gestionar proyectos Scrum y compartir el avance mediante un portal de cliente de solo lectura.
 
-Incluye autenticación con correo o Google, calendario diario/semanal/mensual, reuniones con Google Meet, reportes de portafolio, sincronización individual con Google Calendar y actualización automática en segundo plano con indicadores de estado.
+Incluye autenticación con correo o Google, aislamiento por espacios de trabajo, roles de acceso, directorio editable de clientes, calendario diario/semanal/mensual, reuniones con Google Meet, reportes de portafolio, sincronización individual con Google Calendar y actualización automática en segundo plano.
 
 ## Estructura
 
@@ -38,7 +38,7 @@ Requisitos: Node.js 20 o superior y PostgreSQL.
 
 Abre `http://localhost:5173`. La API queda en `http://localhost:4000/api`; Vite redirige automáticamente las peticiones `/api`.
 
-En el primer acceso, crea una cuenta desde `/register`. El registro crea también un workspace personal. Las rutas internas exigen una sesión válida; únicamente `/portal/:token` continúa siendo público y de solo lectura.
+En el primer acceso, crea una cuenta desde `/register`. El registro crea también un workspace personal aislado. Desde **Configuración** puedes compartirlo con otra cuenta registrada como administrador, editor o cliente de solo lectura. Las rutas internas exigen una sesión válida; únicamente `/portal/:token` continúa siendo público y de solo lectura.
 
 ## Primeros registros
 

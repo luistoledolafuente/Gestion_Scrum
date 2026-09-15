@@ -23,7 +23,7 @@ export const authController = {
   }) as RequestHandler,
 
   me: (async (req, res) => {
-    const user = await prisma.user.findUniqueOrThrow({ where: { id: req.authUser!.id }, include: { memberships: { include: { workspace: true } } } });
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: req.authUser!.id }, include: { memberships: { include: { workspace: true }, orderBy: { createdAt: 'asc' } } } });
     res.json(authService.publicUser(user));
   }) as RequestHandler,
 

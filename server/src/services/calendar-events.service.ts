@@ -4,6 +4,7 @@ import { HttpError } from '../utils/http-error.js';
 import type { JsonObject } from '../utils/payload.js';
 import { requireFields, withDates } from '../utils/payload.js';
 import { googleCalendarService } from './google-calendar.service.js';
+import type { WorkspaceAccess } from '../types/workspace.js';
 
 const include = {
   project: { select: { id: true, name: true } },
@@ -24,8 +25,8 @@ const clientEmailFor = async (event: CalendarEvent) => {
 };
 
 export const calendarEventsService = {
-  list: (query: Record<string, unknown>) => {
-    const where: Prisma.CalendarEventWhereInput = {};
+  list: (query: Record<string, unknown>, access: WorkspaceAccess) => {
+    const where: Prisma.CalendarEventWhereInput = { project: { workspaceId: access.workspaceId } };
     if (typeof query.projectId === 'string') where.projectId = query.projectId;
     if (typeof query.clientId === 'string') where.clientId = query.clientId;
     const range: Prisma.DateTimeFilter = {};
@@ -34,10 +35,16 @@ export const calendarEventsService = {
     if (range.gte || range.lte) where.startDateTime = range;
     return prisma.calendarEvent.findMany({ where, include, orderBy: { startDateTime: 'asc' } });
   },
-  get: (id: string) => prisma.calendarEvent.findUnique({ where: { id }, include }),
-  create: async (body: JsonObject, organizerUserId?: string) => {
+  get: (id: string, access: WorkspaceAccess) => prisma.calendarEvent.findFirst({ where: { id, project: { workspaceId: access.workspaceId } }, include }),
+  create: async (body: JsonObject, access: WorkspaceAccess) => {
     requireFields(body, ['projectId', 'title', 'description', 'type', 'startDateTime', 'endDateTime']);
-    const data = { ...withDates(body, ['startDateTime', 'endDateTime']), organizerUserId };
+    const project = await prisma.project.findFirst({ where: { id: String(body.projectId), workspaceId: access.workspaceId } });
+    if (!project) throw new HttpError(400, 'El proyecto no pertenece a este espacio de trabajo.');
+    if (body.clientId) {
+      const client = await prisma.client.findFirst({ where: { id: String(body.clientId), workspaceId: access.workspaceId } });
+      if (!client) throw new HttpError(400, 'El cliente no pertenece a este espacio de trabajo.');
+    }
+    const data = { ...withDates(body, ['startDateTime', 'endDateTime']), organizerUserId: access.userId };
     validateRange(data);
     let event = await prisma.calendarEvent.create({ data: data as Prisma.CalendarEventUncheckedCreateInput });
     let syncWarning: string | undefined;
@@ -49,9 +56,17 @@ export const calendarEventsService = {
     }
     return { ...(await prisma.calendarEvent.findUniqueOrThrow({ where: { id: event.id }, include })), syncWarning };
   },
-  update: async (id: string, body: JsonObject) => {
-    const current = await prisma.calendarEvent.findUnique({ where: { id } });
+  update: async (id: string, body: JsonObject, access: WorkspaceAccess) => {
+    const current = await prisma.calendarEvent.findFirst({ where: { id, project: { workspaceId: access.workspaceId } } });
     if (!current) throw new HttpError(404, 'Reunión no encontrada.');
+    if (body.projectId) {
+      const project = await prisma.project.findFirst({ where: { id: String(body.projectId), workspaceId: access.workspaceId } });
+      if (!project) throw new HttpError(400, 'El proyecto no pertenece a este espacio de trabajo.');
+    }
+    if (body.clientId) {
+      const client = await prisma.client.findFirst({ where: { id: String(body.clientId), workspaceId: access.workspaceId } });
+      if (!client) throw new HttpError(400, 'El cliente no pertenece a este espacio de trabajo.');
+    }
     const data = withDates(body, ['startDateTime', 'endDateTime']);
     validateRange(data, current);
     let event = await prisma.calendarEvent.update({ where: { id }, data: data as Prisma.CalendarEventUncheckedUpdateInput });
@@ -70,8 +85,8 @@ export const calendarEventsService = {
     }
     return { ...(await prisma.calendarEvent.findUniqueOrThrow({ where: { id: event.id }, include })), syncWarning };
   },
-  remove: async (id: string) => {
-    const current = await prisma.calendarEvent.findUnique({ where: { id } });
+  remove: async (id: string, access: WorkspaceAccess) => {
+    const current = await prisma.calendarEvent.findFirst({ where: { id, project: { workspaceId: access.workspaceId } } });
     if (!current) throw new HttpError(404, 'Reunión no encontrada.');
     let syncWarning: string | undefined;
     if (current.googleEventId) {

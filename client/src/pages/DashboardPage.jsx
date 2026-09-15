@@ -8,12 +8,14 @@ import { SyncStatus } from '../components/SyncStatus'
 import { Toast } from '../components/Toast'
 import { usePolling } from '../hooks/usePolling'
 import { useToast } from '../hooks/useToast'
+import { useAuth } from '../hooks/useAuth'
 import { getErrorMessage } from '../services/api'
 import { clientsService } from '../services/clients.service'
 import { projectsService } from '../services/projects.service'
 import { sprintsService } from '../services/sprints.service'
 
 export function DashboardPage() {
+  const { canEdit, activeWorkspace } = useAuth()
   const [searchParams] = useSearchParams()
   const [modal, setModal] = useState('')
   const [action, setAction] = useState({ saving: false, error: '' })
@@ -48,7 +50,7 @@ export function DashboardPage() {
   const query = (searchParams.get('q') || '').toLowerCase()
   const visibleProjects = data.projects.filter((project) => `${project.name} ${project.description} ${project.client?.name || ''} ${project.client?.companyName || ''}`.toLowerCase().includes(query))
   return <div className="page">
-    <div className="page-heading"><div><span className="eyebrow">Workspace general</span><h1>Buenos días, equipo</h1><p>Una vista clara del trabajo, las entregas y el ritmo actual.</p></div><div className="heading-actions"><SyncStatus {...polling} onRefresh={polling.refresh} compact /><button className="secondary-button" onClick={() => openModal('client')}><Users size={16} />Nuevo cliente</button><button className="primary-button" onClick={() => openModal('project')}><Plus size={17} />Nuevo proyecto</button></div></div>
+    <div className="page-heading"><div><span className="eyebrow">{activeWorkspace?.name || 'Workspace'}</span><h1>Buenos días, equipo</h1><p>Una vista clara del trabajo, las entregas y el ritmo actual.</p></div><div className="heading-actions"><SyncStatus {...polling} onRefresh={polling.refresh} compact />{canEdit && <><button className="secondary-button" onClick={() => openModal('client')}><Users size={16} />Nuevo cliente</button><button className="primary-button" onClick={() => openModal('project')}><Plus size={17} />Nuevo proyecto</button></>}</div></div>
     <section className="stat-grid" id="metrics">
       <article><span className="stat-icon purple"><FolderKanban /></span><div><small>Proyectos activos</small><strong>{active}</strong><em>de {data.projects.length} totales</em></div></article>
       <article><span className="stat-icon blue"><TimerReset /></span><div><small>Sprints en curso</small><strong>{running}</strong><em>{data.sprints.length} planificados</em></div></article>

@@ -8,7 +8,7 @@ const columns = [
 ]
 const typeIcon = { bug: Bug, task: CheckSquare2, story: Sparkles }
 
-export function KanbanBoard({ items = [], onMove, updatingId }) {
+export function KanbanBoard({ items = [], onMove, updatingId, readOnly = false }) {
   return <div className="kanban-board">{columns.map((column) => {
     const columnItems = items.filter((item) => item.state === column.id)
     return <section className="kanban-column" key={column.id}>
@@ -21,9 +21,9 @@ export function KanbanBoard({ items = [], onMove, updatingId }) {
             <h4>{item.backlogItem.title}</h4>
             <p>{item.backlogItem.description}</p>
             <footer><span><Icon size={15} />{item.backlogItem.type}</span><b>{item.backlogItem.storyPoints} pts</b></footer>
-            <select aria-label={`Mover ${item.backlogItem.title}`} value={item.state} disabled={updatingId === item.id} onChange={(event) => onMove(item.id, event.target.value)}>
+            {!readOnly && <select aria-label={`Mover ${item.backlogItem.title}`} value={item.state} disabled={updatingId === item.id} onChange={(event) => onMove(item.id, event.target.value)}>
               {columns.map((option) => <option value={option.id} key={option.id}>{option.label}</option>)}
-            </select>
+            </select>}
           </article>
         })}
         {!columnItems.length && <div className="kanban-empty">Sin tareas</div>}

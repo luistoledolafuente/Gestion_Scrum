@@ -13,8 +13,10 @@ import { useToast } from '../hooks/useToast'
 import { getErrorMessage } from '../services/api'
 import { projectsService } from '../services/projects.service'
 import { sprintsService } from '../services/sprints.service'
+import { useAuth } from '../hooks/useAuth'
 
 export function SprintPage() {
+  const { canEdit } = useAuth()
   const { sprintId } = useParams()
   const [error, setError] = useState('')
   const [updatingId, setUpdatingId] = useState('')
@@ -48,8 +50,8 @@ export function SprintPage() {
     <div className="page-heading sprint-heading"><div><div className="title-line"><h1>{sprint.name}</h1><StatusBadge status={sprint.status} /></div><p>{sprint.goal}</p></div><SyncStatus {...polling} onRefresh={polling.refresh} /></div>
     {error && <div className="inline-alert">{error}</div>}
     <section className="sprint-summary"><article><span><Gauge /></span><div><small>Avance</small><strong>{metrics.progressPercentage}%</strong></div></article><article><span><CheckCircle2 /></span><div><small>Completados</small><strong>{metrics.completedPoints} pts</strong></div></article><article><span><Target /></span><div><small>Comprometidos</small><strong>{metrics.totalPoints} pts</strong></div></article><div className="mini-chart"><div><strong>Burndown</strong><small>Puntos restantes vs. línea ideal</small></div><BurndownChart data={metrics.burndown} /></div></section>
-    <div className="section-heading"><div><h2>Tablero del sprint</h2><p>Mueve cada tarjeta desde el selector de estado</p></div><button className="tiny-button" onClick={() => { setError(''); setModal(true) }}><Plus size={14} />Añadir item</button></div>
-    <KanbanBoard items={sprint.items} onMove={moveItem} updatingId={updatingId} />
+    <div className="section-heading"><div><h2>Tablero del sprint</h2><p>{canEdit ? 'Mueve cada tarjeta desde el selector de estado' : 'Vista de solo lectura'}</p></div>{canEdit && <button className="tiny-button" onClick={() => { setError(''); setModal(true) }}><Plus size={14} />Añadir item</button>}</div>
+    <KanbanBoard items={sprint.items} onMove={moveItem} updatingId={updatingId} readOnly={!canEdit} />
     <FormModal open={modal} title="Añadir al sprint" description="Selecciona un item existente del backlog de este proyecto." onClose={() => setModal(false)}><form className="entity-form" onSubmit={addItem}><div className="form-grid"><label className="full-field">Item de backlog<select name="backlogItemId" required defaultValue=""><option value="" disabled>Selecciona un item</option>{availableItems.map((item) => <option value={item.id} key={item.id}>{item.title} · {item.storyPoints} pts</option>)}</select></label></div>{!availableItems.length && <div className="form-notice">No quedan items disponibles. Crea uno nuevo desde la vista del proyecto.</div>}{error && <div className="form-error">{error}</div>}<footer><button type="button" className="ghost-button" onClick={() => setModal(false)}>Cancelar</button><button className="primary-button" disabled={saving || !availableItems.length}>{saving ? 'Añadiendo…' : 'Añadir al sprint'}</button></footer></form></FormModal>
     <Toast message={toast.message} onClose={toast.dismiss} />
   </div>

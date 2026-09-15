@@ -60,6 +60,7 @@ enum CalendarEventStatus {
 enum WorkspaceRole {
   OWNER
   ADMIN
+  EDITOR
   MEMBER
   CLIENT
 }
@@ -99,6 +100,8 @@ model Workspace {
   name        String
   slug        String            @unique
   memberships WorkspaceMember[]
+  clients     Client[]
+  projects    Project[]
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 }
@@ -131,17 +134,25 @@ model GoogleConnection {
 
 model Client {
   id             String          @id @default(uuid())
+  workspaceId    String
   name           String
-  email          String          @unique
+  email          String
   companyName    String?
+  phone          String?
+  notes          String?
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   projects       Project[]
   calendarEvents CalendarEvent[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+
+  @@unique([workspaceId, email])
+  @@index([workspaceId])
 }
 
 model Project {
   id                String          @id @default(uuid())
+  workspaceId       String
   name              String
   description       String
   status            ProjectStatus   @default(active)
@@ -151,6 +162,7 @@ model Project {
   publicPortalToken String          @unique @default(uuid())
   deliverables      String[]        @default([])
   blockers          String?
+  workspace         Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   client            Client          @relation(fields: [clientId], references: [id])
   sprints           Sprint[]
   backlogItems      BacklogItem[]
@@ -159,6 +171,7 @@ model Project {
   updatedAt         DateTime        @updatedAt
 
   @@index([clientId])
+  @@index([workspaceId])
 }
 
 model CalendarEvent {

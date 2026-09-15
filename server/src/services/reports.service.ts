@@ -1,17 +1,20 @@
 import { prisma } from '../models/prisma.js';
+import type { WorkspaceAccess } from '../types/workspace.js';
 
-export const getPortfolioReport = async () => {
+export const getPortfolioReport = async (access: WorkspaceAccess) => {
   const now = new Date();
   const [projects, sprints, upcomingMeetings] = await Promise.all([
     prisma.project.findMany({
+      where: { workspaceId: access.workspaceId },
       include: { client: { select: { name: true, companyName: true } }, backlogItems: true },
       orderBy: { updatedAt: 'desc' },
     }),
     prisma.sprint.findMany({
+      where: { project: { workspaceId: access.workspaceId } },
       include: { project: { select: { id: true, name: true } }, items: { include: { backlogItem: { select: { storyPoints: true } } } } },
       orderBy: { endDate: 'desc' },
     }),
-    prisma.calendarEvent.count({ where: { status: 'SCHEDULED', startDateTime: { gte: now } } }),
+    prisma.calendarEvent.count({ where: { project: { workspaceId: access.workspaceId }, status: 'SCHEDULED', startDateTime: { gte: now } } }),
   ]);
 
   const allItems = projects.flatMap((project) => project.backlogItems);

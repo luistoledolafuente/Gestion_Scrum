@@ -35,7 +35,7 @@ const createWorkspace = (name: string, userId: string) => prisma.workspace.creat
 
 const getUser = (id: string) => prisma.user.findUniqueOrThrow({
   where: { id },
-  include: { memberships: { include: { workspace: true } } },
+  include: { memberships: { include: { workspace: true }, orderBy: { createdAt: 'asc' } } },
 });
 
 export const authService = {

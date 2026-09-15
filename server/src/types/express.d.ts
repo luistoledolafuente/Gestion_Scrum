@@ -3,6 +3,8 @@ declare global {
     interface Request {
       authUser?: { id: string; email: string; name: string; pictureUrl: string | null };
       authSessionId?: string;
+      authWorkspaceId?: string;
+      authWorkspaceRole?: 'OWNER' | 'ADMIN' | 'EDITOR' | 'MEMBER' | 'CLIENT';
     }
   }
 }

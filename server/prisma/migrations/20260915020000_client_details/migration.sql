@@ -1,0 +1,2 @@
+ALTER TABLE "Client" ADD COLUMN "phone" TEXT;
+ALTER TABLE "Client" ADD COLUMN "notes" TEXT;

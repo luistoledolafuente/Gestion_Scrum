@@ -1,12 +1,13 @@
 import { prisma } from '../models/prisma.js';
 import { HttpError } from '../utils/http-error.js';
+import type { WorkspaceAccess } from '../types/workspace.js';
 
 const dayKey = (date: Date) => date.toISOString().slice(0, 10);
 const nextDay = (date: Date) => new Date(date.getTime() + 86_400_000);
 
-export const getSprintMetrics = async (id: string) => {
-  const sprint = await prisma.sprint.findUnique({
-    where: { id },
+export const getSprintMetrics = async (id: string, access: WorkspaceAccess) => {
+  const sprint = await prisma.sprint.findFirst({
+    where: { id, project: { workspaceId: access.workspaceId } },
     include: { items: { include: { backlogItem: { select: { storyPoints: true } } } } },
   });
   if (!sprint) throw new HttpError(404, 'Sprint no encontrado');

@@ -17,10 +17,13 @@ Durante el desarrollo, las peticiones a `/api` se redirigen al backend en `http:
 - `/projects/:projectId`: backlog, iteraciones y métricas del proyecto.
 - `/sprints/:sprintId`: tablero Kanban editable y burndown.
 - `/calendar`: agenda diaria, semanal y mensual; creación y edición de reuniones con Google Meet.
+- `/clients`: directorio de clientes con edición de contacto, empresa, teléfono y notas internas.
 - `/reports`: métricas del portafolio, velocidad, riesgos, avance por proyecto y exportación CSV.
 - `/settings`: perfil, estado de integración y conexión individual con Google Calendar.
 - `/portal/:token`: reporte de solo lectura para el cliente.
 
 Todas las vistas internas están protegidas. El portal del cliente es público por diseño y solo expone la información filtrada por su token.
+
+El selector del sidebar permite cambiar entre los workspaces a los que pertenece la cuenta. En Configuración, propietarios y administradores pueden compartir el espacio con una cuenta ya registrada y asignar acceso de administrador, editor o cliente de solo lectura.
 
 El dashboard se actualiza cada 30 segundos, los proyectos cada 20, los sprints cada 15 y el portal público cada 45 segundos. El polling se pausa cuando la pestaña no está visible y todas las vistas permiten actualizar manualmente.
