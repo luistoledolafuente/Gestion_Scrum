@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProjectStatus {
+  active
+  paused
+  done
+}
+
+enum SprintStatus {
+  planned
+  in_progress
+  completed
+}
+
+enum BacklogItemType {
+  story
+  task
+  bug
+}
+
+enum Priority {
+  low
+  medium
+  high
+}
+
+enum BacklogItemStatus {
+  backlog
+  in_sprint
+  done
+}
+
+enum SprintItemState {
+  todo
+  in_progress
+  review
+  done
+}
+
+enum CalendarEventType {
+  MEETING
+  DEMO
+  PLANNING
+  RETRO
+}
+
+enum CalendarEventStatus {
+  SCHEDULED
+  CANCELLED
+  DONE
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  CLIENT
+}
+
+model User {
+  id               String             @id @default(uuid())
+  email            String             @unique
+  name             String
+  passwordHash     String?
+  pictureUrl       String?
+  googleSubject    String?            @unique
+  emailVerified    Boolean            @default(false)
+  sessions         Session[]
+  memberships      WorkspaceMember[]
+  googleConnection GoogleConnection?
+  calendarEvents   CalendarEvent[]    @relation("CalendarEventOrganizer")
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+model Session {
+  id                  String   @id @default(uuid())
+  tokenHash           String   @unique
+  userId              String
+  expiresAt           DateTime
+  oauthStateHash      String?
+  oauthStateExpiresAt DateTime?
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt           DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Workspace {
+  id          String            @id @default(uuid())
+  name        String
+  slug        String            @unique
+  memberships WorkspaceMember[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model WorkspaceMember {
+  id          String        @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(MEMBER)
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model GoogleConnection {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  googleAccountEmail   String?
+  refreshTokenCipher   String
+  accessTokenCipher    String?
+  accessTokenExpiresAt DateTime?
+  scopes               String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Client {
+  id             String          @id @default(uuid())
+  name           String
+  email          String          @unique
+  companyName    String?
+  projects       Project[]
+  calendarEvents CalendarEvent[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Project {
+  id                String          @id @default(uuid())
+  name              String
+  description       String
+  status            ProjectStatus   @default(active)
+  startDate         DateTime
+  endDate           DateTime?
+  clientId          String
+  publicPortalToken String          @unique @default(uuid())
+  deliverables      String[]        @default([])
+  blockers          String?
+  client            Client          @relation(fields: [clientId], references: [id])
+  sprints           Sprint[]
+  backlogItems      BacklogItem[]
+  calendarEvents    CalendarEvent[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([clientId])
+}
+
+model CalendarEvent {
+  id             String              @id @default(uuid())
+  projectId      String
+  clientId       String?
+  title          String
+  description    String
+  type           CalendarEventType
+  startDateTime  DateTime
+  endDateTime    DateTime
+  location       String?
+  syncWithGoogle Boolean             @default(true)
+  createGoogleMeet Boolean           @default(false)
+  inviteClient   Boolean             @default(false)
+  googleEventId  String?             @unique
+  googleMeetUrl  String?
+  organizerUserId String?
+  status         CalendarEventStatus @default(SCHEDULED)
+  project        Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  client         Client?             @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  organizer      User?               @relation("CalendarEventOrganizer", fields: [organizerUserId], references: [id], onDelete: SetNull)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([projectId])
+  @@index([clientId])
+  @@index([startDateTime])
+  @@index([organizerUserId])
+}
+
+model Sprint {
+  id            String         @id @default(uuid())
+  projectId     String
+  name          String
+  goal          String
+  startDate     DateTime
+  endDate       DateTime
+  status        SprintStatus   @default(planned)
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  items         SprintItem[]
+  retrospective Retrospective?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([projectId])
+}
+
+model BacklogItem {
+  id          String            @id @default(uuid())
+  projectId   String
+  title       String
+  description String
+  type        BacklogItemType
+  priority    Priority          @default(medium)
+  storyPoints Int               @default(0)
+  status      BacklogItemStatus @default(backlog)
+  isKey       Boolean           @default(false)
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sprintItems SprintItem[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([projectId])
+}
+
+model SprintItem {
+  id            String          @id @default(uuid())
+  sprintId      String
+  backlogItemId String
+  state         SprintItemState @default(todo)
+  completedAt   DateTime?
+  sprint        Sprint          @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  backlogItem   BacklogItem     @relation(fields: [backlogItemId], references: [id], onDelete: Cascade)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([sprintId, backlogItemId])
+  @@index([sprintId])
+  @@index([backlogItemId])
+}
+
+model Retrospective {
+  id               String   @id @default(uuid())
+  sprintId         String   @unique
+  whatWentWell     String
+  whatDidNotGoWell String
+  actions          String
+  sprint           Sprint   @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
