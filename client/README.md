@@ -9,6 +9,8 @@
 
 Durante el desarrollo, las peticiones a `/api` se redirigen al backend en `http://localhost:4000`.
 
+En un despliegue separado, como Render Static Site + Web Service, configura `VITE_API_URL` con la URL pública completa de la API, por ejemplo `https://gestion-scrum-api.onrender.com/api`.
+
 ## Vistas
 
 - `/login`: acceso con correo/contraseña o Google.
