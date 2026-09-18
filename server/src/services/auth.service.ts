@@ -9,10 +9,14 @@ export const SESSION_COOKIE = 'momentum_session';
 export const GOOGLE_LOGIN_STATE_COOKIE = 'momentum_google_login_state';
 export const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
+const isProduction = env.nodeEnv === 'production';
+
 const cookieOptions = {
   httpOnly: true,
-  secure: env.nodeEnv === 'production',
-  sameSite: 'lax' as const,
+  secure: isProduction,
+  // The Render frontend and API use different origins. Production cookies
+  // therefore need explicit cross-site delivery for credentialed requests.
+  sameSite: isProduction ? ('none' as const) : ('lax' as const),
   path: '/',
 };
 
