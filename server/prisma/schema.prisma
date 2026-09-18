@@ -160,7 +160,7 @@ model Project {
   endDate           DateTime?
   clientId          String
   publicPortalToken String          @unique @default(uuid())
-  deliverables      String[]        @default([])
+  deliverables      Json            @default("[]")
   blockers          String?
   workspace         Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   client            Client          @relation(fields: [clientId], references: [id])

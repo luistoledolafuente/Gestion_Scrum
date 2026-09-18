@@ -35,7 +35,7 @@ export function DashboardPage() {
     event.preventDefault(); setAction({ saving: true, error: '' })
     const form = new FormData(event.currentTarget)
     const payload = Object.fromEntries(form)
-    payload.deliverables = payload.deliverables ? payload.deliverables.split('\n').map((item) => item.trim()).filter(Boolean) : []
+    payload.deliverables = payload.deliverables ? payload.deliverables.split('\n').map((title) => title.trim()).filter(Boolean).map((title) => ({ title, completed: false })) : []
     if (!payload.endDate) delete payload.endDate
     try { await projectsService.create(payload); setModal(''); await polling.refresh(); toast.showToast('Proyecto creado y dashboard actualizado.') }
     catch (error) { setAction({ saving: false, error: getErrorMessage(error) }); return }
