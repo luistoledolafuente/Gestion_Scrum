@@ -4,7 +4,7 @@
 
 - `npm run dev`: servidor con recarga en caliente.
 - `npm run build`: genera Prisma Client y compila TypeScript.
-- `npm start`: ejecuta la compilación.
+- `npm start`: aplica las migraciones pendientes y ejecuta la compilación.
 - `npm run prisma:migrate -- --name nombre`: crea/aplica migraciones.
 - `npm run prisma:studio`: abre Prisma Studio.
 
@@ -25,6 +25,8 @@ Variables principales:
 `GOOGLE_ACCESS_TOKEN`, `GOOGLE_REFRESH_TOKEN` y `GOOGLE_REDIRECT_URI` se conservan únicamente como compatibilidad con la integración anterior de una sola cuenta. Para el flujo multiusuario no son necesarios: cada usuario conecta su cuenta desde el dashboard y sus tokens se almacenan cifrados.
 
 Si las credenciales Google están vacías, el registro con correo y el calendario interno siguen funcionando.
+
+En producción, `npm start` ejecuta `prisma migrate deploy` antes de levantar la API. Así, una base nueva o un despliegue con cambios de esquema queda actualizado antes de aceptar solicitudes.
 
 ## Configuración manual de Google Cloud
 
